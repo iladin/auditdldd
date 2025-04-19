@@ -1,6 +1,18 @@
-- name: Ensure auditd is installed
+# debug: var=hostvars
+- name: Ensure auditd is installed on Redhat
+  become: true
+  when: [ansible_os_family == 'RedHat']
+  ansible.builtin.dnf:
+    name:
+      - audit
+      # audispd-plugins
+    state: present
+
+- name: Try to install auditd off of Redhat
+  become: true
+  when: [ansible_os_family != 'RedHat']
   package:
-    name: 
+    name:
       - auditd
       # audispd-plugins
     state: present
@@ -12,7 +24,7 @@
   loop: "{{ auditdldd_monitor_files }}"
   when: item is file
   changed_when: false
-- debug: var=ldd_output
+# debug: var=ldd_output
 
 - name: Extend audit list with dynamic dependencies
   set_fact:
