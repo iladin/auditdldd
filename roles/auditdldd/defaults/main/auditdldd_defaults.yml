@@ -1,0 +1,4 @@
+auditdldd_monitor_files:
+  - /usr/bin/ssh
+  - /etc/shadow
+  - /usr/bin/bash

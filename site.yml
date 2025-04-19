@@ -1,0 +1,5 @@
+#!/usr/bin/env -S ansible-playbook -i localhost,
+- name: Setup Auditd with ldd
+  hosts: localhost
+  roles:
+    - role: auditdldd

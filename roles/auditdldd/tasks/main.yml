@@ -1,0 +1,37 @@
+- name: Ensure auditd is installed
+  package:
+    name: 
+      - auditd
+      # audispd-plugins
+    state: present
+
+- name: Find dynamic dependencies
+  shell: |
+    ldd {{ item }} 2>/dev/null | grep '=>' | awk '{ print $3 }' || true
+  register: ldd_output
+  loop: "{{ auditdldd_monitor_files }}"
+  when: item is file
+  changed_when: false
+- debug: var=ldd_output
+
+- name: Extend audit list with dynamic dependencies
+  set_fact:
+    auditdldd_all_files: "{{ auditdldd_monitor_files + ldd_output.results | map(attribute='stdout_lines') | sum(start=[]) | unique }}"
+- name: Set up auditd rules for monitored files
+  become: true
+  diff: true
+  ansible.builtin.template:
+    src: auditdldd.rules.j2
+    dest: /etc/audit/rules.d/auditdldd.rules
+    mode: '0640'
+#    validate: 'auditctl -R %s'
+  notify: restart auditd
+- name: Start auditd
+  become: true
+  service:
+    name: "{{ item }}"
+    state: started
+    enabled: true
+  loop:
+    - audit-rules
+    - auditd
